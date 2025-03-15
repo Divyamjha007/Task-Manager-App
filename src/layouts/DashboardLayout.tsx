@@ -28,7 +28,11 @@ const DashboardLayout: React.FC = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      dispatch(setIsMobile(window.innerWidth < 768));
+      const isMobile = window.innerWidth < 768;
+      dispatch(setIsMobile(isMobile));
+      if (!isMobile) {
+        dispatch(setSidebarOpen(true));
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -44,12 +48,20 @@ const DashboardLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar component for both mobile and desktop */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={handleSidebarToggle} />
 
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity duration-300 md:hidden z-20"
+          onClick={() => handleSidebarToggle(false)}
+        />
+      )}
+
+      {/* Main content wrapper */}
+      <div className={`flex flex-col ${sidebarOpen ? 'md:pl-64' : ''} transition-all duration-300`}>
         {/* Header */}
         <Header
           sidebarOpen={sidebarOpen}
@@ -57,10 +69,12 @@ const DashboardLayout: React.FC = () => {
           user={currentUser}
         />
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-6">
-          <div className="mx-auto max-w-7xl">
-            <Outlet />
+        {/* Main content */}
+        <main className="flex-1 px-4 py-8 md:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl animate-fade-in">
+            <div className="bg-white rounded-lg shadow-soft p-6">
+              <Outlet />
+            </div>
           </div>
         </main>
 
