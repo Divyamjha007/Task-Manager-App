@@ -63,13 +63,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
   const navigationItems = [
     { to: '/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard', end: true },
-    { to: '/dashboard/tasks', icon: <ListTodo size={20} />, label: 'Tasks' },
-    { to: '/dashboard/projects', icon: <FolderKanban size={20} />, label: 'Projects' },
-    { to: '/dashboard/calendar', icon: <Calendar size={20} />, label: 'Calendar' },
+    { to: '/tasks', icon: <ListTodo size={20} />, label: 'Tasks' },
+    { to: '/projects', icon: <FolderKanban size={20} />, label: 'Projects' },
+    { to: '/calendar', icon: <Calendar size={20} />, label: 'Calendar' },
     ...(user?.role === 'admin'
-      ? [{ to: '/dashboard/admin', icon: <Users size={20} />, label: 'Admin' }]
+      ? [{ to: '/admin', icon: <Users size={20} />, label: 'Admin' }]
       : []),
-    { to: '/dashboard/settings', icon: <Settings size={20} />, label: 'Settings' },
+    { to: '/settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
 
   return (

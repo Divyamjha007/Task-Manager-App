@@ -1,159 +1,212 @@
-import axios from 'axios';
 import { User } from '../store/slices/authSlice';
+import { dummyUsers, DummyUser } from '../data/dummyUsers';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Simulating API delays
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Register user
-const register = async (userData: { name: string; email: string; password: string }) => {
-  const response = await axios.post(`${API_URL}/auth/register`, userData);
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
 
-  if (response.data) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+export interface RegisterData {
+  name: string;
+  email: string;
+  password: string;
+}
+
+class AuthServiceClass {
+  private users: DummyUser[] = [...dummyUsers];
+
+  async login({ email, password }: LoginCredentials) {
+    await delay(1000); // Simulate API call
+
+    const user = this.users.find(u => u.email === email && u.password === password);
+    if (!user) {
+      throw new Error('Invalid email or password');
+    }
+
+    // Don't send password to frontend
+    const { password: _, ...userWithoutPassword } = user;
+    
+    // Store in localStorage
+    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+    localStorage.setItem('token', 'dummy-token');
+    
+    return userWithoutPassword;
   }
 
-  return response.data;
-};
+  async register({ name, email, password }: RegisterData) {
+    await delay(1000); // Simulate API call
 
-// Login user
-const login = async (userData: { email: string; password: string }) => {
-  const response = await axios.post(`${API_URL}/auth/login`, userData);
+    if (this.users.some(u => u.email === email)) {
+      throw new Error('Email already registered');
+    }
 
-  if (response.data) {
-    localStorage.setItem('token', response.data.token);
-    localStorage.setItem('user', JSON.stringify(response.data.user));
+    const newUser: DummyUser = {
+      id: (this.users.length + 1).toString(),
+      name,
+      email,
+      password,
+      role: 'employee',
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    this.users.push(newUser);
+
+    // Don't send password to frontend
+    const { password: _, ...userWithoutPassword } = newUser;
+    
+    // Store in localStorage
+    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+    localStorage.setItem('token', 'dummy-token');
+    
+    return userWithoutPassword;
   }
 
-  return response.data;
-};
+  async forgotPassword(email: string) {
+    await delay(1000); // Simulate API call
 
-// Logout user
-const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-};
+    const user = this.users.find(u => u.email === email);
+    if (!user) {
+      throw new Error('Email not found');
+    }
 
-// Get current user
-const getCurrentUser = async () => {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    throw new Error('No token found');
+    // Generate reset token
+    const resetToken = Math.random().toString(36).substring(2, 15);
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+    // Update user with reset token
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+
+    // In a real app, this would send an email
+    console.log(`Reset token for ${email}: ${resetToken}`);
+    
+    return true;
   }
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  async resetPassword(token: string, newPassword: string) {
+    await delay(1000); // Simulate API call
 
-  const response = await axios.get(`${API_URL}/auth/me`, config);
-  return response.data;
-};
+    const user = this.users.find(u => u.resetToken === token);
+    if (!user) {
+      throw new Error('Invalid reset token');
+    }
 
-// Forgot password
-const forgotPassword = async (email: string) => {
-  const response = await axios.post(`${API_URL}/auth/forgotpassword`, { email });
-  return response.data;
-};
+    if (user.resetTokenExpiry && user.resetTokenExpiry < new Date()) {
+      throw new Error('Reset token has expired');
+    }
 
-// Reset password
-const resetPassword = async (token: string, password: string) => {
-  const response = await axios.put(`${API_URL}/auth/resetpassword/${token}`, {
-    password,
-  });
-  return response.data;
-};
+    // Update password
+    user.password = newPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    user.updatedAt = new Date().toISOString();
 
-// Update password
-const updatePassword = async (passwordData: { currentPassword: string; newPassword: string }) => {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    throw new Error('No token found');
+    return true;
   }
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  async validateResetToken(token: string) {
+    await delay(500); // Simulate API call
 
-  const response = await axios.put(
-    `${API_URL}/auth/updatepassword`,
-    passwordData,
-    config
-  );
-  return response.data;
-};
+    const user = this.users.find(u => u.resetToken === token);
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      return false;
+    }
 
-// Update profile
-const updateProfile = async (profileData: Partial<User>) => {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    throw new Error('No token found');
+    return true;
   }
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  async getCurrentUser() {
+    await delay(500); // Simulate API call
+    
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      throw new Error('No user found');
+    }
 
-  const response = await axios.put(
-    `${API_URL}/users/profile`,
-    profileData,
-    config
-  );
-
-  if (response.data) {
-    localStorage.setItem('user', JSON.stringify(response.data));
+    return JSON.parse(userStr);
   }
 
-  return response.data;
-};
+  async updatePassword(passwordData: { currentPassword: string; newPassword: string }) {
+    await delay(1000); // Simulate API call
+    
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      throw new Error('No user found');
+    }
 
-// Upload avatar
-const uploadAvatar = async (formData: FormData) => {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    throw new Error('No token found');
+    const currentUser = JSON.parse(userStr);
+    const user = this.users.find(u => u.id === currentUser.id);
+    
+    if (!user || user.password !== passwordData.currentPassword) {
+      throw new Error('Current password is incorrect');
+    }
+
+    user.password = passwordData.newPassword;
+    user.updatedAt = new Date().toISOString();
+
+    return true;
   }
 
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'multipart/form-data',
-    },
-  };
+  async updateProfile(profileData: Partial<User>) {
+    await delay(1000); // Simulate API call
+    
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      throw new Error('No user found');
+    }
 
-  const response = await axios.post(
-    `${API_URL}/users/avatar`,
-    formData,
-    config
-  );
+    const currentUser = JSON.parse(userStr);
+    const user = this.users.find(u => u.id === currentUser.id);
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-  if (response.data) {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    user.avatar = response.data.avatar;
-    localStorage.setItem('user', JSON.stringify(user));
+    Object.assign(user, profileData);
+    user.updatedAt = new Date().toISOString();
+
+    const { password: _, ...userWithoutPassword } = user;
+    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+
+    return userWithoutPassword;
   }
 
-  return response.data;
-};
+  async uploadAvatar(formData: FormData) {
+    await delay(1000); // Simulate API call
+    
+    const userStr = localStorage.getItem('user');
+    if (!userStr) {
+      throw new Error('No user found');
+    }
 
-const authService = {
-  register,
-  login,
-  logout,
-  getCurrentUser,
-  forgotPassword,
-  resetPassword,
-  updatePassword,
-  updateProfile,
-  uploadAvatar,
-};
+    const currentUser = JSON.parse(userStr);
+    const user = this.users.find(u => u.id === currentUser.id);
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
 
+    // Simulate avatar upload
+    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+    user.avatar = avatarUrl;
+    user.updatedAt = new Date().toISOString();
+
+    const { password: _, ...userWithoutPassword } = user;
+    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+
+    return { avatar: avatarUrl };
+  }
+
+  logout() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }
+}
+
+export const authService = new AuthServiceClass();
 export default authService; 

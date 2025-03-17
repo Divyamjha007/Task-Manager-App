@@ -99,6 +99,13 @@ export const authSlice = createSlice({
       state.message = '';
       state.error = null;
     },
+    setUser: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+      state.isSuccess = true;
+      state.isError = false;
+      state.error = null;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -163,7 +170,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const { reset } = authSlice.actions;
+export const { reset, setUser } = authSlice.actions;
 
 // Selectors
 export const selectUser = (state: RootState) => state.auth.user;
