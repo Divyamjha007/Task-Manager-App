@@ -1,46 +1,150 @@
-# Getting Started with Create React App
+# Task Manager App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack task management application built with React, TypeScript, and Node.js. This application helps users organize and manage their tasks efficiently with features like user authentication, task creation, project management, and more.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- User Authentication (Login/Register)
+- Task Management
+- Project Organization
+- User Profile Management
+- Password Reset Functionality
+- Avatar Upload Support
+- Responsive Design
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Frontend: React, TypeScript, Redux Toolkit
+- Backend: Node.js, Express, TypeScript
+- Database: MongoDB
+- Authentication: JWT
+- Deployment: Vercel
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Prerequisites
 
-### `npm test`
+- Node.js (v14 or higher)
+- npm or yarn
+- MongoDB instance
+- Vercel account (for deployment)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Environment Variables
 
-### `npm run build`
+### Frontend (.env)
+```
+REACT_APP_API_URL=/api/v1/auth
+REACT_APP_NODE_ENV=production
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Backend (.env)
+```
+PORT=5000
+MONGODB_URI=your_mongodb_uri
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRE=30d
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Installation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/Task-Manager-App.git
+cd Task-Manager-App
+```
 
-### `npm run eject`
+2. Install dependencies:
+```bash
+# Install frontend dependencies
+npm install
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+# Install backend dependencies
+cd server
+npm install
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+3. Set up environment variables:
+- Copy `.env.example` to `.env` in both root and server directories
+- Update the variables with your values
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Development
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+1. Start the backend server:
+```bash
+cd server
+npm run dev
+```
 
-## Learn More
+2. Start the frontend development server:
+```bash
+# From the root directory
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The application will be available at `http://localhost:3000`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Deployment
+
+This project is configured for deployment on Vercel. The `vercel.json` file handles the routing configuration:
+
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "server/src/index.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "src/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "build" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/src/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "src/index.html"
+    }
+  ]
+}
+```
+
+### Deployment Steps
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Configure environment variables in Vercel dashboard
+4. Deploy!
+
+## API Endpoints
+
+### Authentication
+- POST `/api/v1/auth/register` - Register a new user
+- POST `/api/v1/auth/login` - Login user
+- GET `/api/v1/auth/me` - Get current user
+- PUT `/api/v1/auth/updatedetails` - Update user details
+- PUT `/api/v1/auth/updatepassword` - Update password
+- POST `/api/v1/auth/forgotpassword` - Request password reset
+- PUT `/api/v1/auth/resetpassword/:resettoken` - Reset password
+- GET `/api/v1/auth/logout` - Logout user
+
+### Tasks
+- GET `/api/v1/tasks` - Get all tasks
+- POST `/api/v1/tasks` - Create a new task
+- PUT `/api/v1/tasks/:id` - Update a task
+- DELETE `/api/v1/tasks/:id` - Delete a task
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
