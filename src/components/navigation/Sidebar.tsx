@@ -13,6 +13,7 @@ import {
   Settings,
   X,
   ChevronRight,
+  Server,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -70,6 +71,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       ? [{ to: '/admin', icon: <Users size={20} />, label: 'Admin' }]
       : []),
     { to: '/settings', icon: <Settings size={20} />, label: 'Settings' },
+    // API Tester for development
+    { to: '/api-tester', icon: <Server size={20} />, label: 'API Tester' },
   ];
 
   return (

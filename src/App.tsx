@@ -17,13 +17,14 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import Projects from './pages/Projects';
 import ProjectDetails from './pages/projects/ProjectDetails';
-import Tasks from './pages/Tasks';
+import Tasks from './pages/tasks/Tasks';
 import TaskDetails from './pages/tasks/TaskDetails';
 import Calendar from './pages/Calendar';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import Admin from './pages/Admin';
+import APITester from './components/test/APITester';
 
 // Auth guard
 const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({ element }) => {
@@ -85,6 +86,7 @@ const AppRoutes: React.FC = () => {
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="admin" element={<AdminRoute element={<Admin />} />} />
+          <Route path="api-tester" element={<APITester />} />
         </Route>
 
         {/* 404 Route */}

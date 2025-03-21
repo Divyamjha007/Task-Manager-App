@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { authService } from '../../services/authService';
+import authService from '../../services/authService';
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,9 +21,9 @@ const ResetPasswordPage: React.FC = () => {
       }
 
       try {
-        const isValid = await authService.validateResetToken(token);
-        setIsValidToken(isValid);
-        if (!isValid) {
+        const result = await authService.validateResetToken(token);
+        setIsValidToken(result.isValid);
+        if (!result.isValid) {
           setError('This password reset link has expired or is invalid');
         }
       } catch (err) {
