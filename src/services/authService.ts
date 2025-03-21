@@ -1,8 +1,7 @@
 import axios from 'axios';
 import { User } from '../store/slices/authSlice';
 
-// Update the API URL to match your backend route structure
-const API_URL = process.env.REACT_APP_API_URL || '/api/v1/auth';
+const API_URL = '/api/auth';
 
 // Create axios instance with auth header
 const axiosInstance = () => {
