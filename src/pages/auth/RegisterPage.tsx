@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../../store/slices/authSlice';
-import { authService } from '../../services/authService';
+import authService from '../../services/authService';
 import { AppDispatch } from '../../store';
 
 const RegisterPage: React.FC = () => {

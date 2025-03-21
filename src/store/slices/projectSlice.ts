@@ -123,6 +123,42 @@ export const deleteProject = createAsyncThunk(
   }
 );
 
+// Add project member
+export const addProjectMember = createAsyncThunk(
+  'projects/addMember',
+  async ({ projectId, userId }: { projectId: string; userId: string }, thunkAPI) => {
+    try {
+      return await projectService.addProjectMember(projectId, userId);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Remove project member
+export const removeProjectMember = createAsyncThunk(
+  'projects/removeMember',
+  async ({ projectId, userId }: { projectId: string; userId: string }, thunkAPI) => {
+    try {
+      return await projectService.removeProjectMember(projectId, userId);
+    } catch (error: any) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 export const projectSlice = createSlice({
   name: 'project',
   initialState,
@@ -208,6 +244,44 @@ export const projectSlice = createSlice({
         state.projects = state.projects.filter((project) => project._id !== action.payload);
       })
       .addCase(deleteProject.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+      })
+      // Add project member
+      .addCase(addProjectMember.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(addProjectMember.fulfilled, (state, action: PayloadAction<Project>) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.project = action.payload;
+        // Update the project in the projects array as well
+        const index = state.projects.findIndex(p => p._id === action.payload._id);
+        if (index !== -1) {
+          state.projects[index] = action.payload;
+        }
+      })
+      .addCase(addProjectMember.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload as string;
+      })
+      // Remove project member
+      .addCase(removeProjectMember.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(removeProjectMember.fulfilled, (state, action: PayloadAction<Project>) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.project = action.payload;
+        // Update the project in the projects array as well
+        const index = state.projects.findIndex(p => p._id === action.payload._id);
+        if (index !== -1) {
+          state.projects[index] = action.payload;
+        }
+      })
+      .addCase(removeProjectMember.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload as string;

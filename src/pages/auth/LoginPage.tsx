@@ -11,7 +11,7 @@ import { Input } from '../../components/ui/Input';
 import { Label } from '../../components/ui/Label';
 import { Separator } from '../../components/ui/Separator';
 import { useToast } from '../../hooks/use-toast';
-import { authService } from '../../services/authService';
+import authService from '../../services/authService';
 import { setUser } from '../../store/slices/authSlice';
 
 const LoginPage: React.FC = () => {

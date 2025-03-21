@@ -1,8 +1,17 @@
+import axios from 'axios';
 import { User } from '../store/slices/authSlice';
-import { dummyUsers, DummyUser } from '../data/dummyUsers';
 
-// Simulating API delays
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const API_URL = '/api/auth';
+
+// Create axios instance with auth header
+const axiosInstance = () => {
+  const token = localStorage.getItem('token');
+  return axios.create({
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
 
 export interface LoginCredentials {
   email: string;
@@ -16,197 +25,115 @@ export interface RegisterData {
 }
 
 class AuthServiceClass {
-  private users: DummyUser[] = [...dummyUsers];
-
   async login({ email, password }: LoginCredentials) {
-    await delay(1000); // Simulate API call
-
-    const user = this.users.find(u => u.email === email && u.password === password);
-    if (!user) {
-      throw new Error('Invalid email or password');
+    const response = await axios.post(`${API_URL}/login`, { email, password });
+    
+    if (response.data.success && response.data.token) {
+      const { token, user } = response.data;
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
+      return user;
     }
-
-    // Don't send password to frontend
-    const { password: _, ...userWithoutPassword } = user;
     
-    // Store in localStorage
-    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-    localStorage.setItem('token', 'dummy-token');
-    
-    return userWithoutPassword;
+    throw new Error('Login failed');
   }
 
   async register({ name, email, password }: RegisterData) {
-    await delay(1000); // Simulate API call
-
-    if (this.users.some(u => u.email === email)) {
-      throw new Error('Email already registered');
+    const response = await axios.post(`${API_URL}/register`, { name, email, password });
+    
+    if (response.data.success && response.data.token) {
+      const { token, user } = response.data;
+      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('token', token);
+      return user;
     }
-
-    const newUser: DummyUser = {
-      id: (this.users.length + 1).toString(),
-      name,
-      email,
-      password,
-      role: 'employee',
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    this.users.push(newUser);
-
-    // Don't send password to frontend
-    const { password: _, ...userWithoutPassword } = newUser;
     
-    // Store in localStorage
-    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-    localStorage.setItem('token', 'dummy-token');
-    
-    return userWithoutPassword;
+    throw new Error('Registration failed');
   }
 
   async forgotPassword(email: string) {
-    await delay(1000); // Simulate API call
-
-    const user = this.users.find(u => u.email === email);
-    if (!user) {
-      throw new Error('Email not found');
-    }
-
-    // Generate reset token
-    const resetToken = Math.random().toString(36).substring(2, 15);
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-
-    // Update user with reset token
-    user.resetToken = resetToken;
-    user.resetTokenExpiry = resetTokenExpiry;
-
-    // In a real app, this would send an email
-    console.log(`Reset token for ${email}: ${resetToken}`);
-    
-    return true;
+    const response = await axios.post(`${API_URL}/forgotpassword`, { email });
+    return response.data;
   }
 
-  async resetPassword(token: string, newPassword: string) {
-    await delay(1000); // Simulate API call
-
-    const user = this.users.find(u => u.resetToken === token);
-    if (!user) {
-      throw new Error('Invalid reset token');
-    }
-
-    if (user.resetTokenExpiry && user.resetTokenExpiry < new Date()) {
-      throw new Error('Reset token has expired');
-    }
-
-    // Update password
-    user.password = newPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpiry = undefined;
-    user.updatedAt = new Date().toISOString();
-
-    return true;
+  async resetPassword(token: string, password: string) {
+    const response = await axios.put(`${API_URL}/resetpassword/${token}`, { password });
+    return response.data;
   }
 
   async validateResetToken(token: string) {
-    await delay(500); // Simulate API call
-
-    const user = this.users.find(u => u.resetToken === token);
-    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
-      return false;
+    try {
+      const response = await axios.get(`${API_URL}/resetpassword/${token}`);
+      return { isValid: response.data.success };
+    } catch (error) {
+      return { isValid: false };
     }
-
-    return true;
   }
 
   async getCurrentUser() {
-    await delay(500); // Simulate API call
-    
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      throw new Error('No user found');
+    try {
+      const response = await axiosInstance().get(`${API_URL}/me`);
+      return response.data.user;
+    } catch (error) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      throw error;
     }
-
-    return JSON.parse(userStr);
   }
 
   async updatePassword(passwordData: { currentPassword: string; newPassword: string }) {
-    await delay(1000); // Simulate API call
-    
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      throw new Error('No user found');
-    }
-
-    const currentUser = JSON.parse(userStr);
-    const user = this.users.find(u => u.id === currentUser.id);
-    
-    if (!user || user.password !== passwordData.currentPassword) {
-      throw new Error('Current password is incorrect');
-    }
-
-    user.password = passwordData.newPassword;
-    user.updatedAt = new Date().toISOString();
-
-    return true;
+    const response = await axiosInstance().put(
+      `${API_URL}/updatepassword`, 
+      passwordData
+    );
+    return response.data;
   }
 
   async updateProfile(profileData: Partial<User>) {
-    await delay(1000); // Simulate API call
+    const response = await axiosInstance().put(
+      `${API_URL}/updatedetails`, 
+      profileData
+    );
     
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      throw new Error('No user found');
+    if (response.data.success && response.data.user) {
+      // Update local storage with new user data
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const updatedUser = { ...currentUser, ...response.data.user };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return updatedUser;
     }
-
-    const currentUser = JSON.parse(userStr);
-    const user = this.users.find(u => u.id === currentUser.id);
     
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    Object.assign(user, profileData);
-    user.updatedAt = new Date().toISOString();
-
-    const { password: _, ...userWithoutPassword } = user;
-    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-
-    return userWithoutPassword;
+    return response.data;
   }
 
   async uploadAvatar(formData: FormData) {
-    await delay(1000); // Simulate API call
+    const response = await axiosInstance().put(
+      `/api/users/${JSON.parse(localStorage.getItem('user') || '{}').id}/avatar`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
     
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      throw new Error('No user found');
+    if (response.data.success && response.data.user) {
+      // Update local storage with new avatar URL
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const updatedUser = { ...currentUser, avatar: response.data.user.avatar };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return updatedUser;
     }
-
-    const currentUser = JSON.parse(userStr);
-    const user = this.users.find(u => u.id === currentUser.id);
     
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    // Simulate avatar upload
-    const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
-    user.avatar = avatarUrl;
-    user.updatedAt = new Date().toISOString();
-
-    const { password: _, ...userWithoutPassword } = user;
-    localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-
-    return { avatar: avatarUrl };
+    return response.data;
   }
 
   logout() {
-    localStorage.removeItem('token');
+    axios.get(`${API_URL}/logout`).catch(error => console.error('Logout error:', error));
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   }
 }
 
-export const authService = new AuthServiceClass();
-export default authService; 
+const AuthService = new AuthServiceClass();
+export default AuthService; 
